@@ -15,12 +15,8 @@ import java.util.List;
  * @author Quintin Beukes
  * @since 3.0.3
  */
-@Configuration
 @ConfigurationProperties("spring.cloud.vault")
 public class VaultMultipleDatabaseProperties {
-	@Autowired
-	private ConfigurableBeanFactory beanFactory;
-
 	private List<VaultDatabaseProperties> databases;
 
 	public List<VaultDatabaseProperties> getDatabases() {
@@ -29,14 +25,5 @@ public class VaultMultipleDatabaseProperties {
 
 	public void setDatabases(List<VaultDatabaseProperties> databases) {
 		this.databases = databases;
-	}
-
-	@PostConstruct
-	public void registerBeans() {
-		databases.forEach(d -> {
-			if (!beanFactory.containsBean(d.getRole())) {
-				beanFactory.registerSingleton(d.getRole(), d);
-			}
-		});
 	}
 }
