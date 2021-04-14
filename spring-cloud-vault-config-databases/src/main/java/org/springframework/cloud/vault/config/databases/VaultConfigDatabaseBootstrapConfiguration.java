@@ -34,6 +34,7 @@ import org.springframework.vault.core.util.PropertyTransformer;
 import javax.annotation.PostConstruct;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * Bootstrap configuration providing support for the Database secret backends such as
@@ -60,11 +61,13 @@ public class VaultConfigDatabaseBootstrapConfiguration {
 
 	@PostConstruct
 	public void registerBeans() {
-		multipleDatabaseProperties.getDatabases().forEach(d -> {
-			if (!beanFactory.containsBean(d.getRole())) {
-				beanFactory.registerSingleton(d.getRole(), d);
-			}
-		});
+		if (Objects.nonNull(multipleDatabaseProperties)) {
+			multipleDatabaseProperties.getDatabases().forEach(d -> {
+				if (!beanFactory.containsBean(d.getRole())) {
+					beanFactory.registerSingleton(d.getRole(), d);
+				}
+			});
+		}
 	}
 
 	@Bean
