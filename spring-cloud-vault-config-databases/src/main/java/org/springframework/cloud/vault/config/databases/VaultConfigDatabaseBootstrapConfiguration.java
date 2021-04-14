@@ -16,9 +16,6 @@
 
 package org.springframework.cloud.vault.config.databases;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -35,6 +32,8 @@ import org.springframework.util.Assert;
 import org.springframework.vault.core.util.PropertyTransformer;
 
 import javax.annotation.PostConstruct;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Bootstrap configuration providing support for the Database secret backends such as
@@ -44,12 +43,12 @@ import javax.annotation.PostConstruct;
  * @author Per Abich
  * @author Sebastien Nahelou
  * @author Francis Hitchens
+ * @author Quintin Beukes
  */
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties({ VaultMySqlProperties.class, VaultPostgreSqlProperties.class,
 		VaultCassandraProperties.class, VaultCouchbaseProperties.class, VaultMongoProperties.class,
-		VaultElasticsearchProperties.class, VaultMultipleDatabaseProperties.class,
-		VaultDatabaseProperties.class })
+		VaultElasticsearchProperties.class, VaultMultipleDatabaseProperties.class, VaultDatabaseProperties.class })
 @Order(Ordered.LOWEST_PRECEDENCE - 15)
 public class VaultConfigDatabaseBootstrapConfiguration {
 

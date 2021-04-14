@@ -24,7 +24,8 @@ import org.springframework.lang.Nullable;
  * Configuration properties for Vault using the MySQL integration.
  *
  * @author Mark Paluch
- * @deprecated since 2.0. Use {@link VaultDatabaseProperties} or {@link VaultMultipleDatabaseProperties}.
+ * @deprecated since 2.0. Use {@link VaultDatabaseProperties} or
+ * {@link VaultMultipleDatabaseProperties}.
  */
 @ConfigurationProperties("spring.cloud.vault.mysql")
 @Deprecated
