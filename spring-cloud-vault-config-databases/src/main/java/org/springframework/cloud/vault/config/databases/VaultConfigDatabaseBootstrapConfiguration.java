@@ -61,13 +61,11 @@ public class VaultConfigDatabaseBootstrapConfiguration {
 
 	@PostConstruct
 	public void registerBeans() {
-		if (Objects.nonNull(multipleDatabaseProperties)) {
-			multipleDatabaseProperties.getDatabases().forEach(d -> {
-				if (!beanFactory.containsBean(d.getRole())) {
-					beanFactory.registerSingleton(d.getRole(), d);
-				}
-			});
-		}
+		multipleDatabaseProperties.getDatabases().forEach(d -> {
+			if (!beanFactory.containsBean(d.getRole())) {
+				beanFactory.registerSingleton(d.getRole(), d);
+			}
+		});
 	}
 
 	@Bean
