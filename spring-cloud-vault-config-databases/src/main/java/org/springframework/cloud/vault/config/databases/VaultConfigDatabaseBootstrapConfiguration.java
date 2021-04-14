@@ -27,6 +27,8 @@ import org.springframework.cloud.vault.config.SecretBackendMetadataFactory;
 import org.springframework.cloud.vault.config.VaultSecretBackendDescriptor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.util.Assert;
 import org.springframework.vault.core.util.PropertyTransformer;
 
@@ -42,7 +44,9 @@ import org.springframework.vault.core.util.PropertyTransformer;
 @Configuration(proxyBeanMethods = false)
 @EnableConfigurationProperties({ VaultMySqlProperties.class, VaultPostgreSqlProperties.class,
 		VaultCassandraProperties.class, VaultCouchbaseProperties.class, VaultMongoProperties.class,
-		VaultElasticsearchProperties.class, VaultDatabaseProperties.class })
+		VaultElasticsearchProperties.class, VaultMultipleDatabaseProperties.class,
+		VaultDatabaseProperties.class })
+@Order(Ordered.LOWEST_PRECEDENCE - 15)
 public class VaultConfigDatabaseBootstrapConfiguration {
 
 	@Bean

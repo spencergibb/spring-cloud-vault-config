@@ -17,6 +17,7 @@
 package org.springframework.cloud.vault.config.databases;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.lang.Nullable;
 
 /**

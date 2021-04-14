@@ -119,7 +119,6 @@ public abstract class VaultPropertySourceLocatorSupport implements PropertySourc
 		List<PropertySource<?>> propertySources = new ArrayList<>(doCreateKeyValuePropertySources(environment));
 
 		for (SecretBackendMetadata backendAccessor : sorted) {
-
 			PropertySource<?> vaultPropertySource = createVaultPropertySource(backendAccessor);
 			propertySources.add(vaultPropertySource);
 		}
