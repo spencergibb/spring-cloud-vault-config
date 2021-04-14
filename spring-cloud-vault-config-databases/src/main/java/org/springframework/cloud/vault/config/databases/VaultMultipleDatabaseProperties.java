@@ -18,6 +18,7 @@ package org.springframework.cloud.vault.config.databases;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -30,7 +31,7 @@ import java.util.List;
 @ConfigurationProperties("spring.cloud.vault")
 public class VaultMultipleDatabaseProperties {
 
-	private List<VaultDatabaseProperties> databases;
+	private List<VaultDatabaseProperties> databases = new ArrayList<>();
 
 	public List<VaultDatabaseProperties> getDatabases() {
 		return databases;
