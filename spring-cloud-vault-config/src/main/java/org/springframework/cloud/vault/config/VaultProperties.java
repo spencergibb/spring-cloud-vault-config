@@ -132,6 +132,8 @@ public class VaultProperties implements EnvironmentAware {
 
 	private Session session = new Session();
 
+	private Reactive reactive = new Reactive();
+
 	/**
 	 * Application name for AppId authentication.
 	 */
@@ -350,6 +352,14 @@ public class VaultProperties implements EnvironmentAware {
 
 	public void setAuthentication(AuthenticationMethod authentication) {
 		this.authentication = authentication;
+	}
+
+	public Reactive getReactive() {
+		return reactive;
+	}
+
+	public void setReactive(Reactive reactive) {
+		this.reactive = reactive;
 	}
 
 	/**
@@ -1313,6 +1323,23 @@ public class VaultProperties implements EnvironmentAware {
 
 		public void setExpiryThreshold(Duration expiryThreshold) {
 			this.expiryThreshold = expiryThreshold;
+		}
+
+	}
+
+	public static class Reactive {
+
+		/**
+		 * Enable reactive beans if dependencies are available
+		 */
+		private boolean enabled = true;
+
+		public boolean isEnabled() {
+			return this.enabled;
+		}
+
+		public void setEnabled(boolean enabled) {
+			this.enabled = enabled;
 		}
 
 	}

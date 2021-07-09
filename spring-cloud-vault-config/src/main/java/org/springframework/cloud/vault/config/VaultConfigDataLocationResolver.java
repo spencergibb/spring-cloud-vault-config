@@ -147,6 +147,9 @@ public class VaultConfigDataLocationResolver implements ConfigDataLocationResolv
 
 			return vaultProperties;
 		});
+
+		context.getBootstrapContext().registerIfAbsent(RetryProperties.class,
+				ignore -> context.getBinder().bindOrCreate(RetryProperties.PREFIX, RetryProperties.class));
 	}
 
 	private List<SecretBackendMetadata> getSecretBackends(ConfigDataLocationResolverContext context,

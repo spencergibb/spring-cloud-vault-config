@@ -118,6 +118,10 @@
 |spring.cloud.vault.rabbitmq.role |  | Role name for credentials.
 |spring.cloud.vault.rabbitmq.username-property | `spring.rabbitmq.username` | Target property for the obtained username.
 |spring.cloud.vault.read-timeout | `15000` | Read timeout.
+|spring.cloud.vault.retry.initial-interval | `1000` | Initial retry interval in milliseconds.
+|spring.cloud.vault.retry.multiplier | `1.1` | Multiplier for next interval.
+|spring.cloud.vault.retry.max-interval | `2000` | Maximum interval for backoff.
+|spring.cloud.vault.retry.max-attempts | `6` | Maximum number of attempts.
 |spring.cloud.vault.scheme | `https` | Protocol scheme. Can be either "http" or "https".
 |spring.cloud.vault.session.lifecycle.enabled | `true` | Enable session lifecycle management.
 |spring.cloud.vault.session.lifecycle.expiry-threshold | `7s` | The expiry threshold for a {@link LoginToken}. The threshold represents a minimum TTL duration to consider a login token as valid. Tokens with a shorter TTL are considered expired and are not used anymore. Should be greater than {@code refreshBeforeExpiry} to prevent token expiry.

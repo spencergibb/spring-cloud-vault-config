@@ -38,16 +38,17 @@ import org.springframework.vault.client.VaultEndpointProvider;
  * {@code @EnableAutoConfiguration}.
  */
 @ConditionalOnProperty(name = "spring.cloud.vault.enabled", matchIfMissing = true)
-@EnableConfigurationProperties(VaultProperties.class)
+@EnableConfigurationProperties({ VaultProperties.class, RetryProperties.class })
 @Order(Ordered.LOWEST_PRECEDENCE - 5)
 @Deprecated
 public class VaultBootstrapConfiguration extends VaultAutoConfiguration {
 
 	public VaultBootstrapConfiguration(ConfigurableApplicationContext applicationContext,
-			VaultProperties vaultProperties, ObjectProvider<VaultEndpointProvider> endpointProvider,
+			VaultProperties vaultProperties, RetryProperties retryProperties,
+			ObjectProvider<VaultEndpointProvider> endpointProvider,
 			ObjectProvider<List<RestTemplateCustomizer>> customizers,
 			ObjectProvider<List<RestTemplateRequestCustomizer<?>>> requestCustomizers) {
-		super(applicationContext, vaultProperties, endpointProvider, customizers, requestCustomizers);
+		super(applicationContext, vaultProperties, retryProperties, endpointProvider, customizers, requestCustomizers);
 	}
 
 }

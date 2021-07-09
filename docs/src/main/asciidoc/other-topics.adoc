@@ -35,6 +35,15 @@ spring.cloud.vault:
 ----
 ====
 
+[[vault.config.retry]]
+== Vault Client Retry
+
+If you expect that the config server may occasionally be unavailable when your application starts, you can make it keep trying after a failure. 
+First, you need to set `spring.cloud.vault.fail-fast=true`.
+Then you need to add `spring-retry` to your classpath.
+The default behavior is to retry six times with an initial backoff interval of 1000ms and an exponential multiplier of 1.1 for subsequent backoffs. 
+You can configure these properties by setting the `spring.cloud.config.retry.*` configuration properties.
+
 [[vault.config.namespaces]]
 == Vault Enterprise Namespace Support
 

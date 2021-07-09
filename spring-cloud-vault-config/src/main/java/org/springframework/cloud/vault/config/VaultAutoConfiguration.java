@@ -19,7 +19,10 @@ package org.springframework.cloud.vault.config;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ObjectFactory;
@@ -37,8 +40,10 @@ import org.springframework.core.annotation.AnnotationAwareOrderComparator;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.http.client.ClientHttpRequestFactory;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
+import org.springframework.util.ClassUtils;
 import org.springframework.vault.authentication.ClientAuthentication;
 import org.springframework.vault.authentication.LifecycleAwareSessionManager;
 import org.springframework.vault.authentication.SessionManager;
@@ -64,13 +69,19 @@ import org.springframework.web.client.RestTemplate;
  */
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnProperty(name = "spring.cloud.vault.enabled", matchIfMissing = true)
-@EnableConfigurationProperties(VaultProperties.class)
+@EnableConfigurationProperties({ VaultProperties.class, RetryProperties.class })
 @Order(Ordered.LOWEST_PRECEDENCE - 5)
 public class VaultAutoConfiguration {
+
+	private final Log log = LogFactory.getLog(getClass());
+
+	private static final String RETRY_TEMPLATE = "org.springframework.retry.support.RetryTemplate";
 
 	private final ConfigurableApplicationContext applicationContext;
 
 	private final VaultProperties vaultProperties;
+
+	private final RetryProperties retryProperties;
 
 	private final VaultConfiguration configuration;
 
@@ -81,12 +92,13 @@ public class VaultAutoConfiguration {
 	private final List<RestTemplateRequestCustomizer<?>> requestCustomizers;
 
 	public VaultAutoConfiguration(ConfigurableApplicationContext applicationContext, VaultProperties vaultProperties,
-			ObjectProvider<VaultEndpointProvider> endpointProvider,
+			RetryProperties retryProperties, ObjectProvider<VaultEndpointProvider> endpointProvider,
 			ObjectProvider<List<RestTemplateCustomizer>> customizers,
 			ObjectProvider<List<RestTemplateRequestCustomizer<?>>> requestCustomizers) {
 
 		this.applicationContext = applicationContext;
 		this.vaultProperties = vaultProperties;
+		this.retryProperties = retryProperties;
 		this.configuration = new VaultConfiguration(vaultProperties);
 
 		VaultEndpointProvider provider = endpointProvider.getIfAvailable();
@@ -129,7 +141,21 @@ public class VaultAutoConfiguration {
 	@Bean
 	@ConditionalOnMissingBean
 	public ClientFactoryWrapper clientHttpRequestFactoryWrapper() {
-		return new ClientFactoryWrapper(this.configuration.createClientHttpRequestFactory());
+		ClientHttpRequestFactory clientHttpRequestFactory = this.configuration.createClientHttpRequestFactory();
+		if (ClassUtils.isPresent(RETRY_TEMPLATE, getClass().getClassLoader()) && this.vaultProperties.isFailFast()) {
+			Map<String, RetryTemplate> beans = applicationContext.getBeansOfType(RetryTemplate.class);
+			if (!beans.isEmpty()) {
+				Map.Entry<String, RetryTemplate> existingBean = beans.entrySet().stream().findFirst().get();
+				log.info("Using existing RestTemplate '" + existingBean.getKey() + "' for vault retries");
+				clientHttpRequestFactory = VaultRetryUtil
+						.createRetryableClientHttpRequestFactory(existingBean.getValue(), clientHttpRequestFactory);
+			}
+			else {
+				clientHttpRequestFactory = VaultRetryUtil.createRetryableClientHttpRequestFactory(retryProperties,
+						clientHttpRequestFactory);
+			}
+		}
+		return new ClientFactoryWrapper(clientHttpRequestFactory);
 	}
 
 	/**

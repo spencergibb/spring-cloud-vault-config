@@ -46,6 +46,7 @@ import org.springframework.context.support.GenericApplicationContext;
 import org.springframework.core.env.PropertySource;
 import org.springframework.http.client.ClientHttpRequestFactory;
 import org.springframework.lang.Nullable;
+import org.springframework.retry.support.RetryTemplate;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
@@ -102,6 +103,9 @@ public class VaultConfigDataLoader implements ConfigDataLoader<VaultConfigLocati
 
 	private final static boolean REGISTER_REACTIVE_INFRASTRUCTURE = FLUX_AVAILABLE && WEBCLIENT_AVAILABLE;
 
+	private final static boolean RETRY_AVAILABLE = ClassUtils
+			.isPresent("org.springframework.retry.support.RetryTemplate", VaultConfigDataLoader.class.getClassLoader());
+
 	private final DeferredLogFactory logFactory;
 
 	public VaultConfigDataLoader(DeferredLogFactory logFactory) {
@@ -115,6 +119,7 @@ public class VaultConfigDataLoader implements ConfigDataLoader<VaultConfigLocati
 
 		ConfigurableBootstrapContext bootstrap = context.getBootstrapContext();
 		VaultProperties vaultProperties = bootstrap.get(VaultProperties.class);
+		RetryProperties retryProperties = bootstrap.get(RetryProperties.class);
 
 		if (!vaultProperties.isEnabled()) {
 			return SKIP_LOCATION;
@@ -125,9 +130,9 @@ public class VaultConfigDataLoader implements ConfigDataLoader<VaultConfigLocati
 			registerVaultTaskScheduler(bootstrap);
 		}
 
-		registerImperativeInfrastructure(bootstrap, vaultProperties);
+		registerImperativeInfrastructure(bootstrap, vaultProperties, retryProperties);
 
-		if (REGISTER_REACTIVE_INFRASTRUCTURE) {
+		if (REGISTER_REACTIVE_INFRASTRUCTURE && vaultProperties.getReactive().isEnabled()) {
 			registerReactiveInfrastructure(bootstrap, vaultProperties);
 		}
 
@@ -173,9 +178,10 @@ public class VaultConfigDataLoader implements ConfigDataLoader<VaultConfigLocati
 	}
 
 	private void registerImperativeInfrastructure(ConfigurableBootstrapContext bootstrap,
-			VaultProperties vaultProperties) {
+			VaultProperties vaultProperties, RetryProperties retryProperties) {
 
-		ImperativeInfrastructure infra = new ImperativeInfrastructure(bootstrap, vaultProperties, this.logFactory);
+		ImperativeInfrastructure infra = new ImperativeInfrastructure(bootstrap, vaultProperties, retryProperties,
+				this.logFactory);
 
 		infra.registerClientHttpRequestFactoryWrapper();
 		infra.registerRestTemplateBuilder();
@@ -191,7 +197,7 @@ public class VaultConfigDataLoader implements ConfigDataLoader<VaultConfigLocati
 
 			infra.registerClientAuthentication();
 
-			if (!REGISTER_REACTIVE_INFRASTRUCTURE) {
+			if (!(REGISTER_REACTIVE_INFRASTRUCTURE && vaultProperties.getReactive().isEnabled())) {
 				infra.registerVaultSessionManager();
 			}
 
@@ -428,6 +434,8 @@ public class VaultConfigDataLoader implements ConfigDataLoader<VaultConfigLocati
 
 		private final VaultProperties vaultProperties;
 
+		private final RetryProperties retryProperties;
+
 		private final VaultConfiguration configuration;
 
 		private final VaultEndpointProvider endpointProvider;
@@ -435,9 +443,10 @@ public class VaultConfigDataLoader implements ConfigDataLoader<VaultConfigLocati
 		private final DeferredLogFactory logFactory;
 
 		ImperativeInfrastructure(ConfigurableBootstrapContext bootstrap, VaultProperties vaultProperties,
-				DeferredLogFactory logFactory) {
+				RetryProperties retryProperties, DeferredLogFactory logFactory) {
 			this.bootstrap = bootstrap;
 			this.vaultProperties = vaultProperties;
+			this.retryProperties = retryProperties;
 			this.configuration = new VaultConfiguration(vaultProperties);
 			this.endpointProvider = SimpleVaultEndpointProvider.of(this.configuration.createVaultEndpoint());
 			this.logFactory = logFactory;
@@ -447,6 +456,11 @@ public class VaultConfigDataLoader implements ConfigDataLoader<VaultConfigLocati
 			registerIfAbsent(this.bootstrap, "clientHttpRequestFactoryWrapper", ClientFactoryWrapper.class, () -> {
 
 				ClientHttpRequestFactory factory = this.configuration.createClientHttpRequestFactory();
+				if (RETRY_AVAILABLE && this.vaultProperties.isFailFast()) {
+					RetryTemplate retryTemplate = bootstrap.getOrElse(RetryTemplate.class,
+							VaultRetryUtil.createRetryTemplate(retryProperties));
+					factory = VaultRetryUtil.createRetryableClientHttpRequestFactory(retryTemplate, factory);
+				}
 
 				// early initialization
 				try {
